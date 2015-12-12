@@ -2,6 +2,8 @@
 
 Trabajo práctico de la materia Organización del Computador (75.03) en assembler IBM/370 de la Facultad de Ingeniería de la Universidad de Buenos Aires.
 
+El archivo principal del tp es: [CLIE.mlc](https://github.com/eze1981/7503-organizacion-del-computador/blob/master/src/CLIE.mlc)
+
 ### Splash screen
 <img alt="splash-screen" src="https://github.com/eze1981/7503-organizacion-del-computador/blob/master/images/splash.png" width="600">
 
