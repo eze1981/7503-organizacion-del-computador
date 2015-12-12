@@ -1,0 +1,1336 @@
+***********************************************************
+*    TP: 008 / Agenda Electronica II
+*    Autor: Ezequiel Miguel Gioia
+*    Padron: 81265
+*    Fecha: Octubre/Noviembre del 2003
+***********************************************************
+*
+*----------------------------------------------------------
+*                        PROGRAMA
+*----------------------------------------------------------
+*23456789-123456789-123456789012345678901234567890123456789
+*
+*+++     PPIO      3,4,12,10        
+CLIE     START  0
+        STM     14,12,12(13)
+        BALR    3,0
+        USING   *,3,4,12,10
+        LA      4,4095(3)
+        LA      4,1(4)
+        LA      12,4095(4)
+        LA      12,1(12)
+        LA      10,4095(12)
+        LA      10,1(10)        
+        LR      15,13
+        LA      13,SAVREG
+        ST      15,4(0,13)
+        ST      13,8(0,15)
+        B       FDSA
+SAVREG  DC      18F'0'
+FDSA    DS      0C
+*+++    FIN DE LA PPIO
+	 SVC       31                  *desactiva el CR (SVC 209)
+	 BAL       5,SSPLASH           *subrrutina splash
+VALIDA   BAL       5,SINIT             *subrrutina init
+	 CLI       OPCION,C'1'
+	 BE        AGENDA       
+	 CLI       OPCION,C'2'
+	 BE        CALC
+	 CLI       OPCION,C'3'
+         BE        MEMO
+         CLI       OPCION,C'H'        
+         BE        AYUDA
+	 CLI       OPCION,C'h'
+	 BE        AYUDA
+	 CLI       OPCION,C'S'
+	 BE        SALIR
+	 CLI       OPCION,C's'      
+	 BE        SALIR                    
+	 B         VALIDA         
+AGENDA   BAL       5,SAGENDA    
+	 B         VALIDA
+CALC     BAL       5,SCALCU            *subrrutina calcu
+	 B         VALIDA
+MEMO     BAL       5,SMEMO       
+         B         VALIDA
+AYUDA    CLRSCR 
+	 WTO       'LLAMA A LA AYUDA'         
+SALIR    BAL       5,SSALIDA           *subrrutina salida
+	 SVC       30                  *activa el CR
+	 FIN
+
+*----------------------------------------------------------
+*                        SUBRRUTINAS
+*----------------------------------------------------------
+**************        subrrutina splash     ***************
+*
+SSPLASH  CLRSCR                  
+	 OPEN      FGSPLASH
+OTRA     GET       FGSPLASH,CLINEA
+	 WTO       CLINEA        
+	 B         OTRA
+ESPLASH  CLOSE     FGSPLASH
+	 WTOR      ,OPCION
+	 BR        5 
+*
+**************      subrrutina init       *****************
+*
+SINIT    CLRSCR
+	 SVC       31
+	 OPEN      FGINIT                  
+	 GET       FGINIT,CLINEA
+	 WTOXY     CLINEA,80,00,00,17 
+OTRO     GET       FGINIT,CLINEA
+	 WTO       CLINEA        
+	 B         OTRO
+EINIT    CLOSE     FGINIT
+	 WTOR      ,OPCION
+	 BR        5 
+*
+**************      subrrutina salida    ******************
+*
+SSALIDA  CLRSCR           
+	 BR        5 
+*
+*
+**************      subrrutina agenda    ******************
+*
+*
+SAGENDA  CLRSCR                           *muestro la interfase
+	 OPEN      FGAGEN                
+	 GET       FGAGEN,CLINEA
+	 MVC       CDISP6(80),CLINEA
+	 WTOXY     CLINEA,80,00,00,17 
+OTRAG    GET       FGAGEN,CLINEA
+	 WTO       CLINEA        
+	 B         OTRAG
+EAGEN    CLOSE     FGAGEN
+*abro el archivo con la agenda y lo cargo en memoria
+*uso la palabra FCONTRG para contar los registros leidos
+         LA        6,TAGENDA
+         LA        11,10
+INICIAL  MVC       0(3,6),=X'000FE2'
+         LA        6,255(6)
+         BCT       11,INICIAL
+	 LA        11,0
+         ST        11,FCONTRG             *inicializo el contador
+         OPEN      FGCONTAC         
+         LA        6,TAGENDA
+OTROREG  GET       FGCONTAC,REGISTRO
+         L         7,FCONTRG              *incremento el contador
+         A         7,FUNO
+         ST        7,FCONTRG
+	 MVC	   0(255,6),REGISTRO
+         LA        6,255(6)
+         L         1,FCONTRG
+         C         1,=F'11'
+	 BC	   10,ECONTAC           *no leo mas de 10 registros
+	 B         OTROREG                
+ECONTAC  CLOSE     FGCONTAC
+*valido la operacion seleccionada
+OPERA	 LA        6,0
+         WTOXY     ' ',1,0F,90,07
+         WTOR      ,COPERAC
+	 CLI       COPERAC,C'1'
+         BE        AGREGAR
+         CLI       COPERAC,C'2'
+         BE        CONSULTA
+         CLI       COPERAC,C'3'
+         BE        LISTADO
+	 CLI       COPERAC,C'M'
+         BE        ENDAGEN    
+         CLI       COPERAC,C'm'
+         BE        ENDAGEN    
+         B         OPERA
+*miro si hay memoria disponible en la agenda
+AGREGAR  L         1,FCONTRG
+         C         1,=F'10'
+         BE        FULLMEM
+	 CLRSCR                          *ingreso el nuevo contacto
+	 WTOXY     CDISP6,80,00,00,17
+         MVI       CDISP1,C' '
+         MVC       CDISP1+1(79),CDISP1
+         CLI       COPERAC,C'E'
+         BNE       REGNUEVO
+         MVC       CDISP1(31),=C'Ingrese el registro a modificar'
+         B         REGMODIF
+REGNUEVO MVC       CDISP1(36),=C'Ingrese los datos del nuevo registro'
+REGMODIF LA        1,0
+         WTOXY     CDISP1,80,03,07,07
+         WTOXY     ' ',1,05,07,07
+         WTO       'Nombre:'
+	 WTOXY     ' ',1,05,0E,07
+	 WTOR      ,RGNOMBRE
+ERRAPE   LA        6,0
+         MVI       CDISP1,C' '
+         MVC       CDISP1+1(79),CDISP1
+         WTOXY     CDISP1,80,06,00,07
+	 WTOXY     ' ',1,06,06,07
+         WTO       '*Apellido:'
+	 WTOXY     ' ',1,06,10,07
+	 WTOR      ,RGAPE  
+*valido Apellido no nulo         
+         LA        6,RGAPE
+         LA        7,20
+COMPAPE  CLI       0(6),C' '
+         BNE       OKAPE
+         LA        6,1(6)
+         BCT       7,COMPAPE
+         B         ERRAPE
+OKAPE    LA        6,0
+         MVI       CDISP1,C' '
+         MVC       CDISP1+1(79),CDISP1
+         WTOXY     CDISP1,80,07,00,07
+	 WTOXY     ' ',1,07,06,07
+         WTO       '*Domicilio particular:'
+	 WTOXY     ' ',1,07,1C,07
+	 WTOR      ,RGDOMP
+*valido Domicilio particular no nulo	 
+         LA        6,RGDOMP
+         LA        7,50
+COMPDOMP CLI       0(6),C' '
+         BNE       OKDOMP
+         LA        6,1(6)
+         BCT       7,COMPDOMP
+         B         OKAPE         *error
+OKDOMP   LA        6,0
+	 WTOXY     ' ',1,08,07,07
+         WTO       'Domicilio comercial:'
+	 WTOXY     ' ',1,08,1B,07
+	 WTOR      ,RGDOMC
+	 WTOXY     ' ',1,09,07,07
+         WTO       'Telefono particular:'
+	 WTOXY     ' ',1,09,1B,07
+	 WTOR      ,RGTELP
+	 WTOXY     ' ',1,0A,07,07
+         WTO       'Telefono comercial:'
+	 WTOXY     ' ',1,0A,1A,07
+	 WTOR      ,RGTELC
+ERRMAIL  LA        6,0         
+         MVI       CDISP1,C' '
+         MVC       CDISP1+1(79),CDISP1
+         WTOXY     CDISP1,80,0B,00,07
+	 WTOXY     ' ',1,0B,07,07
+         WTO       'Email:'
+	 WTOXY     ' ',1,0B,0D,07
+	 WTOR      ,RGEMAIL
+*validacion del mail (si no es nulo)
+         LA        6,RGEMAIL
+	 LA        7,35
+COMPNULO CLI       0(6),C' '
+         BNE       NONULO
+         LA        6,1(6)
+         BCT       7,COMPNULO
+         B         ERRFECHA       *mail valido (nulo)
+NONULO   LA        6,RGEMAIL
+         CLI       0(6),C'@'     *antes del arroba
+         CLI       0(6),C' '     *exige dos caracteres no nulos
+         BE        ERRMAIL
+         LA        6,1(6)
+         CLI       0(6),C'@'
+         CLI       0(6),C' '
+         BE        ERRMAIL
+         LA        6,1(6)         
+	 LA        7,33
+COMAROBA CLI       0(6),C'@'      *busco un arroba
+         BE        OKARROBA       
+         CLI       0(6),C' '
+         BE        ERRMAIL
+         LA        6,1(6)
+         BCT       7,COMAROBA
+         B         ERRMAIL
+OKARROBA LA        8,35
+         SR        8,7           
+         LA        8,2(8)        *los dos caracteres siguientes
+         LA        6,1(6)        *al arroba no pueden ser nulos
+         CLI       0(6),C' '
+         BE        ERRMAIL
+         CLI       0(6),C'.'
+         BE        ERRMAIL
+         CLI       0(6),C'@'
+         BE        ERRMAIL
+         LA        6,1(6)        
+         CLI       0(6),C' '
+         BE        ERRMAIL
+         CLI       0(6),C'.'
+         BE        ERRMAIL
+         CLI       0(6),C'@'
+         BE        ERRMAIL
+         LA        6,1(6)
+COMPDOT  CLI       0(6),C'.'     *busco un punto despues del arroba
+         BE        OKDOT         *OK DOT  (mail valido)
+         CLI       0(6),C' '
+         BE        ERRMAIL
+         LA        6,1(6)
+	 BCT       8,COMPDOT
+         B         ERRMAIL
+OKDOT    LA        6,1(6)
+         CLI       0(6),C' '        *despues del punto
+         BE        ERRMAIL          *exige dos caracteres no nulos
+         LA        6,1(6)
+         CLI       0(6),C' '
+         BE        ERRMAIL
+ERRFECHA LA        6,0         
+ 	 MVI       CDISP1,C' '
+         MVC       CDISP1+1(79),CDISP1
+         WTOXY     CDISP1,80,0C,00,07
+         WTOXY     ' ',1,0C,06,07
+         WTO       '*Fecha de nacimiento (DD/MM/AAAA):'
+	 WTOXY     ' ',1,0C,28,07
+	 WTOR      ,CFECHA
+*validacion fisica de la fecha    
+         MVC       CAUX(1),CFECHA+2
+         CLI       CAUX,C'/'
+         BNE       ERRFECHA
+         MVC       CAUX(1),CFECHA+5
+         CLI       CAUX,C'/'
+         BNE       ERRFECHA
+         LA        6,CFECHA
+         LA        7,2
+COMPDIA  CLI       0(6),C'0'
+         BL        ERRFECHA
+         LA        6,1(6)
+         CLI       0(6),C'9'
+         BH        ERRFECHA
+	 BCT       7,COMPDIA
+         LA        6,CFECHA+3
+         LA        7,2
+COMPMES  CLI       0(6),C'0'
+         BL        ERRFECHA
+         LA        6,1(6)
+         CLI       0(6),C'9'
+         BH        ERRFECHA
+	 BCT       7,COMPMES
+         LA        6,CFECHA+6
+         LA        7,4
+COMPANIO CLI       0(6),C'0'
+         BL        ERRFECHA
+         LA        6,1(6)
+         CLI       0(6),C'9'
+         BH        ERRFECHA
+	 BCT       7,COMPANIO 
+*validacion logica de la fecha         
+         LA        6,CFECHA
+         ZAP       PDSPLAY,=P'0'
+         PACK      PDSPLAY,0(2,6)      *empaqueto los dias
+         CP        PDSPLAY,=P'1'
+         BC        4,ERRFECHA          *no hay dia=0
+*si el mes es febrero...
+         CLC       3(2,6),=C'02'       
+         BNE       NOFEBRER
+         ZAP       PDSPLAY,=P'0'
+         PACK      PDSPLAY,6(4,6)      *empaqueto el anio
+         DP        PDSPLAY,=P'4'
+	 MVC       PRESTO+4(1),PDSPLAY+4
+         CP        PRESTO,=P'0' 
+	 BC        6,NOBISIES       *si resto no es 0 no es bisiesto
+*...si es bisiesto
+         ZAP       PDSPLAY,=P'0'
+         PACK      PDSPLAY,0(2,6)      *empaqueto los dias
+	 CP        PDSPLAY,=P'29'
+         BC        2,ERRFECHA          *no hay dia mayor a 29
+         B         OKFECHA         
+*...no es bisiesto
+NOBISIES ZAP       PDSPLAY,=P'0'
+         PACK      PDSPLAY,0(2,6)      *empaqueto los dias
+         CP        PDSPLAY,=P'28'
+         BC        2,ERRFECHA          *no hay dia mayor a 28
+         B         OKFECHA
+*.el mes no es febrero, miro si es de 30 dias o de 31
+NOFEBRER CLC       3(2,6),=C'04'       
+         BE        MESDE30
+         CLC       3(2,6),=C'06'       
+         BE        MESDE30
+         CLC       3(2,6),=C'09'       
+         BE        MESDE30
+         CLC       3(2,6),=C'11'       
+         BE        MESDE30
+         ZAP       PDSPLAY,=P'0'
+         PACK      PDSPLAY,3(2,6)      *empaqueto el mes
+         CP        PDSPLAY,=P'1'
+         BC        4,ERRFECHA          *no hay mes menor a 1
+         CP        PDSPLAY,=P'12'
+         BC        2,ERRFECHA          *no hay mes mayor a 12
+         B         MESDE31         
+MESDE30  ZAP       PDSPLAY,=P'0'
+         PACK      PDSPLAY,0(2,6)      *empaqueto los dias
+         CP        PDSPLAY,=P'30'
+         BC        2,ERRFECHA          *no hay dia mayor a 30
+         B         OKFECHA 
+MESDE31  ZAP       PDSPLAY,=P'0'
+         PACK      PDSPLAY,0(2,6)      *empaqueto los dias
+         CP        PDSPLAY,=P'31'
+         BC        2,ERRFECHA          *no hay dia mayor a 31
+         B         OKFECHA
+OKFECHA  MVC       RGFDIA(2),CFECHA
+	 MVC       RGFMES(2),CFECHA+3
+	 MVC       RGFANIO(4),CFECHA+6
+*se que hay lugar para el nuevo contacto y todos los datos
+*estan almacendados temporalemente en el REGISTRO
+*busco lugar en TAGENDA para copiar el registro ahi         
+COPIAR   LA        6,TAGENDA
+         LA        11,10               
+BUSCLUG  CLI       2(6),C'N'         
+         BNE       OKLUGAR         
+         LA        6,255(6)           *paso al siguiente registro
+         BCT       11,BUSCLUG
+*tengo a R6 apuntando al registro libre
+OKLUGAR  MVC       REGISTRO(3),=X'000FD5'
+         MVC       0(255,6),REGISTRO  *copio el registro en la agenda
+         L         1,FCONTRG              *incremento el contador
+         A         1,FUNO
+         ST        1,FCONTRG
+         WTOXY     ' ',1,0F,07,07
+         CLI       COPERAC,C'E'
+         BNE       FINNUEVO
+         MVI       COPERAC,C'1'
+         WTOR      'EL CONTACTO FUE MODIFICADO CON EXITO!',CAUX
+         B         FINAGREG
+FINNUEVO LA        1,0
+         WTOR      'EL NUEVO CONTACTO FUE AGREGADO CON EXITO!',CAUX
+FINAGREG B         AGENFIN
+*
+FULLMEM  CLRSCR
+	 WTOXY     CDISP6,80,00,00,17 *no hay lugar para el contacto
+         WTOXY     ' ',1,07,10,07
+	 WTO       'ERROR'         
+         WTOXY     ' ',1,08,10,07
+	 WTO       'NO HAY MEMORIA DISPONIBLE PARA OTRO CONTACTO'
+         WTOR      ,CAUX
+	 B         SAGENDA
+*
+*
+CONSULTA CLRSCR
+*consulta de contactos
+	 OPEN      FGBUSC              *muestro la interfase
+	 GET       FGBUSC,CLINEA
+	 WTOXY     CLINEA,80,00,00,17 
+OTRB     GET       FGBUSC,CLINEA
+	 WTO       CLINEA        
+	 B         OTRB
+EBUSC    CLOSE     FGBUSC         
+         LA        6,TAGENDA
+         LA        11,10
+INICIAL2 MVC       0(2,6),=X'000F'
+         LA        6,255(6)
+         BCT       11,INICIAL2
+*ingresa la opcion de busqueda
+OPERB	 LA        7,0
+         WTOXY     ' ',1,0F,90,07
+         WTOR      ,COPERAC
+	 CLI       COPERAC,C'1'
+         BE        BUSCAPE         *busca por apellido
+         CLI       COPERAC,C'2'
+         BE        BUSCDOM         *busca por domicilio
+         CLI       COPERAC,C'3'
+         BE        BUSCFECH        *busco por fecha de nacimiento
+	 CLI       COPERAC,C'M'
+         BE        AGENFIN
+	 CLI       COPERAC,C'm'
+         BE        AGENFIN
+         WTOXY     '   ',3,0F,8E,07
+         B         OPERB
+*cargo en R7 el desplazamiento correspondiente segun la busqueda
+BUSCAPE  LA        7,23
+         CLRSCR
+         WTOXY     CDISP6,80,00,00,17
+	 WTOXY     ' ',1,05,07,07
+         WTO       'Ingrese el Apellido a buscar:'
+	 WTOXY     ' ',1,05,25,07
+         WTOR      ,BAPE                  
+         LA        9,BAPE          
+         LA        8,20
+         LA        11,BAPE
+         A         11,=F'19'         
+LENGAPE  CLI       0(11),C' '
+         BNE       OKLENAPE
+         S         11,FUNO       *=F'1'
+         BCT       8,LENGAPE
+OKLENAPE B         BUSQ 
+BUSCDOM  LA        7,43
+         CLRSCR
+         WTOXY     CDISP6,80,00,00,17
+	 WTOXY     ' ',1,05,07,07
+         WTO       'Ingrese el Domicilio a buscar:'
+	 WTOXY     ' ',1,05,26,07
+         WTOR      ,BDOM	 
+         LA        9,BDOM
+         LA        8,50
+         LA        11,BDOM
+         A         11,=F'49'
+LENGDOM  CLI       0(11),C' '
+         BNE       OKLENDOM
+         S         11,FUNO     *=F'1'
+         BCT       8,LENGDOM
+OKLENDOM B         BUSQ
+BUSCFECH LA        7,238
+         CLRSCR
+         WTOXY     CDISP6,80,00,00,17
+	 WTOXY     ' ',1,05,07,07
+         WTO       'Ingrese la Fecha a buscar <DD/MM/AAAA>:'
+	 WTOXY     ' ',1,05,2F,07
+         WTOR      ,BFECH         
+         MVC       BFECH+2(7),BFECH+3
+         MVC       BFECH+4(4),BFECH+5
+         LA        9,BFECH       
+         LA        8,8
+         LA        11,BFECH
+         A         11,=F'7'
+LENGFEC  CLI       0(11),C' '
+         BNE       OKLENFEC
+         S         11,FUNO     *=F'1'
+         BCT       8,LENGFEC     
+OKLENFEC B         BUSQ                   
+*busqueda de registros por cualquier campo o longitud  
+BUSQ     L         11,FCONTRG
+*10      LR        11,10
+         ST        8,FAUX2           *R11 = cantidad de registros
+         ST        9,FAUX      
+         LA        6,TAGENDA         *R8 = longitud a buscar
+         ZAP       PCONT,=P'0'
+BUSCAR2  LA        1,REGISTRO         
+	 AR        1,7
+	 L         9,FAUX        
+         L         8,FAUX2
+         MVC       REGISTRO(255),0(6)
+         CLI       RGDEL,C'N'
+         BNE       OTRORE
+BUSCAR   CLC       0(1,1),0(9)       
+         BNE       OTRORE    
+         LA        1,1(1)
+         LA        9,1(9)         
+         BCT       8,BUSCAR
+         AP        PCONT,=P'1'
+         MVC       0(2,6),PCONT
+OTRORE   LA        6,255(6)
+         BCT       11,BUSCAR2
+*listado de los registros que coinciden con la busqueda
+         LA        6,TAGENDA
+         LA        11,10         R10 = cantidad de registros maxima
+         CLRSCR    
+	 WTOXY     CDISP6,80,00,00,17
+	 WTOXY     ' ',1,05,07,07
+	 WTOXY     ' ',1,04,00,07         
+         CP        PCONT,=P'0'
+         BNE       ENCONTRE
+         WTOXY     ' ',1,07,10,07
+         WTO       'La busqueda realizada no obtuvo ningun resultado'
+         WTOR      ,CAUX
+         B         SAGENDA         
+ENCONTRE MVI       CLINEA,C'-'
+         MVC       CLINEA+1(79),CLINEA
+         WTO       CLINEA
+MOSTRAR  CP        0(2,6),=P'0'
+         BE        MOSTOTRO
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA
+         MVI       CLINEA,C'('
+         MVC       REGISTRO(255),0(6)
+         UNPK      PBUSQ(1),RGCONT+1(1)
+         MVZ       PBUSQ(1),=X'FF'
+         MVC       CLINEA+1(1),PBUSQ
+         MVC       CLINEA+2(13),=C')  Apellido: '
+         MVC       CLINEA+15(20),RGAPE
+         WTO       CLINEA
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA
+         MVC       CLINEA+5(11),=C'Domicilio: '
+         MVC       CLINEA+16(50),RGDOMP
+         WTO       CLINEA
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA
+         MVC       CLINEA+5(21),=C'Fecha de nacimiento: '
+         MVC       CLINEA+26(2),RGFDIA
+         MVI       CLINEA+28,C'/'
+         MVC       CLINEA+29(2),RGFMES
+         MVI       CLINEA+31,C'/'
+         MVC       CLINEA+32(4),RGFANIO
+         WTO       CLINEA
+         MVI       CLINEA,C'-'
+         MVC       CLINEA+1(79),CLINEA
+         WTO       CLINEA
+MOSTOTRO LA        6,255(6)         
+         BCT       11,MOSTRAR
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA
+         WTO       CLINEA
+         WTO       'Ingrese el codigo del registro que desea ver'
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA
+         WTO       CLINEA
+ERRREGIS LA        1,0
+         WTOR      ,CAUX
+         CLI       CAUX,C'1'
+         BL        ERRREGIS
+         CLI       CAUX,C'9'
+         BH        ERRREGIS
+         PACK      PBUSQ,CAUX
+         CP        PBUSQ,PCONT
+         BH        ERRREGIS         
+*el usuario selecciono un registro ese valor esta en PBUSQ
+*el dato esta validado, muestro los datos pedidos
+         CLRSCR 
+         WTOXY     CDISP6,80,00,00,17
+*busco el registro seleccionado en la agenda
+         LA        6,TAGENDA
+         LA        7,10
+BUSQSEL  CP        0(2,6),PBUSQ(1)
+         BE        OKSEL
+         LA        6,255(6)
+         BCT       7,BUSQSEL
+OKSEL    LA        7,0
+         WTOXY     ' ',1,03,00,07
+         MVI       CLINEA,C'-'
+         MVC       CLINEA+1(79),CLINEA
+         WTO       CLINEA
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA
+         MVC       REGISTRO(255),0(6)
+         MVC       CLINEA+2(8),=C'Nombre: '
+         MVC       CLINEA+10(20),RGNOMBRE
+         WTO       CLINEA
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA
+         MVC       CLINEA+2(10),=C'Apellido: '
+         MVC       CLINEA+12(20),RGAPE
+         WTO       CLINEA
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA
+         MVC       CLINEA+2(22),=C'Domicilio particular: '
+         MVC       CLINEA+24(50),RGDOMP
+         WTO       CLINEA
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA
+         MVC       CLINEA+2(21),=C'Domicilio comercial: '
+         MVC       CLINEA+23(50),RGDOMC
+         WTO       CLINEA
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA
+         MVC       CLINEA+2(21),=C'Telefono particular: '
+         MVC       CLINEA+23(30),RGTELP
+         WTO       CLINEA
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA
+         MVC       CLINEA+2(20),=C'Telefono comercial: '
+         MVC       CLINEA+22(30),RGTELC
+         WTO       CLINEA
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA
+         MVC       CLINEA+2(7),=C'Email: '
+         MVC       CLINEA+9(35),RGEMAIL
+         WTO       CLINEA
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA
+         MVC       CLINEA+2(21),=C'Fecha de nacimiento: '
+         MVC       CLINEA+23(2),RGFDIA
+         MVI       CLINEA+25,C'/'
+         MVC       CLINEA+26(2),RGFMES
+         MVI       CLINEA+28,C'/'
+         MVC       CLINEA+29(4),RGFANIO
+         WTO       CLINEA
+         MVI       CLINEA,C'-'
+         MVC       CLINEA+1(79),CLINEA
+         WTO       CLINEA
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA
+         MVC       CLINEA+2(34),=C'BORRAR <B> - EDITAR <E> - MENU <M>'
+         WTO       CLINEA
+ERRACC   LA        7,0
+         WTOXY     ' ',1,0E,00,07         
+         WTOR      ,CAUX
+         CLI       CAUX,C'E'
+         BE        EDITAR
+         CLI       CAUX,C'e'
+         BE        EDITAR
+         CLI       CAUX,C'B'
+         BE        BORRAR
+         CLI       CAUX,C'b'
+         BE        BORRAR
+         CLI       CAUX,C'M'
+         BE        SAGENDA
+         CLI       CAUX,C'm'
+         BE        SAGENDA
+         B         ERRACC
+*edicion de un registro, 
+*R6 esta apuntando al registro a modificar
+EDITAR   MVC       2(1,6),=C'S'
+         L         7,FCONTRG     *decremento el contador de reg
+         S         7,FUNO
+         ST        7,FCONTRG
+         MVI       COPERAC,C'E'
+         B         AGENFIN
+BORRAR   MVC       2(1,6),=C'S'
+         L         7,FCONTRG     *decremento el contador de reg
+         S         7,FUNO
+         ST        7,FCONTRG  
+         B         AGENFIN
+*
+LISTADO  CLRSCR                          *listado de contactos
+	 SVC       30
+         L         11,FCONTRG
+         LA        6,TAGENDA	 
+MUESTRO  MVC       CLINEA(80),0(6)
+	 WTO       CLINEA
+	 MVC       CLINEA(80),80(6)
+	 WTO       CLINEA
+	 LA	   6,255(6)
+ 	 BCT       11,MUESTRO
+	 SVC       31
+	 WTOR      ,CAUX
+	 B         SAGENDA
+AGENFIN	 OPEN      FPCONTAC      
+         LA        6,TAGENDA
+         LA        11,10 
+PUTREG   MVC       REGISTRO(255),0(6)
+         CLI       REGISTRO+2,C'N'
+         LA        6,255(6)
+         BNE       ERRPUT
+         PUT       FPCONTAC,REGISTRO
+ERRPUT   BCT       11,PUTREG
+         CLOSE     FPCONTAC
+*         CLI       COPERAC,C'1'
+*         BE        SAGENDA
+         CLI       COPERAC,C'E'
+         BE        AGREGAR
+         B         SAGENDA
+ENDAGEN  BR        5
+*
+*
+**************      subrrutina calcu     ******************
+*
+SCALCU   CLRSCR
+         OPEN     FGCALCU
+	 GET       FGCALCU,CLINEA
+	 WTOXY     CLINEA,80,00,00,17
+OTRE     GET       FGCALCU,CLINEA
+	 WTO       CLINEA        
+	 B         OTRE
+ECALCU   CLOSE     FGCALCU
+CALCINIT LA        6,0
+	 ZAP       PMEMORIA,=P'0'         *inicializo las variables
+	 ZAP       PACUMUL,=P'0'
+	 ZAP       PDSPLAY,=P'0'          
+	 MVI       CDSPLAY,C' '
+	 MVC       CDSPLAY+1(7),CDSPLAY
+CICLOCAL LA        6,0                    *instruccion nula 
+         MVI       CDISP1,C' '
+         MVC       CDISP1+1(79),CDISP1
+         MVC       CDISP1(29),=C'Ingrese el signo del operando'
+         WTOXY     CDISP1,80,04,17,70     *inicializo el display
+	 WTOXY     CBORDE,80,04,37,07
+         MVI       CDISP1,C' '
+         MVC       CDISP1+1(79),CDISP1
+         WTOXY     CDISP1,80,05,17,07
+	 WTOXY     CBORDE,80,05,37,07            
+	 UNPK      CDSPLAY,PACUMUL        
+	 MVZ       CDSPLAY+7(1),=X'FF'    *muestro el acumulador
+	 WTOXY     ' ',1,05,22,07
+	 WTO       CDSPLAY                  
+	 CP        PACUMUL,=P'0'         
+	 BC        4,NEGATIVO         
+	 B         ERSIGNO                *no es negativo
+NEGATIVO LA        6,0
+*si es negativo muestro el signo 
+         MVI       CDISP1,C' '
+         MVC       CDISP1+1(79),CDISP1
+         WTOXY     CDISP1,80,05,2B,07
+	 WTOXY     CBORDE,80,05,37,07            
+	 WTOXY     ' ',1,05,2B,07
+	 WTO       '-' 
+*        ingreso el signo
+ERSIGNO  CLI       COPERAC,C'/'           *si divido muestro el resto
+         BNE       SINRESTO
+	 WTOXY     'RE',2,5,2C,07
+         MVI       CDISP1,C' '
+         MVC       CDISP1+1(79),CDISP1
+         WTOXY     CDISP1,80,05,2E,07	 
+         WTOXY     ' ',1,05,2E,07  
+         WTO       CRESTO
+         WTOXY     CBORDE,80,05,37,07
+         MVC	   COPERAC(1),=C'c'	                   
+SINRESTO LA        6,0
+	 WTOXY     ' ',1,05,1F,07
+	 WTOR      ,CSIGNO                *ingreso el signo,lo valido
+         MVI       CDISP1,C' '
+         MVC       CDISP1+1(79),CDISP1
+         WTOXY     CDISP1,80,05,22,07
+	 WTOXY     CBORDE,80,05,37,07         
+	 CLI       CSIGNO,C'+'
+	 BE        OKSIGNO
+	 CLI       CSIGNO,C'-'
+	 BE        OKSIGNO         
+	 CLI       CSIGNO,C'R'
+	 BE        MEMRCALL
+	 CLI       CSIGNO,C'r'
+	 BE        MEMRCALL         
+	 CLI       CSIGNO,C'C'
+	 BE        CLACUMUL
+	 CLI       CSIGNO,C'c'
+	 BE        CLACUMUL         
+	 CLI       CSIGNO,C'X'
+	 BE        CLMEM
+	 CLI       CSIGNO,C'x'
+	 BE        CLMEM         
+	 CLI       CSIGNO,C'A'
+	 BE        MEMADD
+	 CLI       CSIGNO,C'a'
+	 BE        MEMADD
+	 CLI       CSIGNO,C'M'
+	 BE        CALCFIN
+	 CLI       CSIGNO,C'm'
+	 BE        CALCFIN
+	 B         ERSIGNO
+*        si el signo es R,r el operando es el contenido de la memoria
+MEMRCALL ZAP       PDSPLAY,PMEMORIA
+	 UNPK      CDSPLAY,PDSPLAY
+	 MVZ       CDSPLAY+7(1),=X'FF'
+         MVI       CDISP1,C' '
+         MVC       CDISP1+1(79),CDISP1
+         MVC       CDISP1(29),=C'Ingrese el valor del operando'
+         WTOXY     CDISP1,80,04,17,70     *inicializo el display
+	 WTOXY     CBORDE,80,04,37,07                           
+	 WTOXY     ' ',1,05,22,07
+	 WTO       CDSPLAY
+	 CP        PDSPLAY,=P'0'         
+	 BC        4,NEGATIV2         
+	 B         EQUSIGNO              *no es negativo        
+NEGATIV2 LA        6,0
+         MVI       CDISP1,C' '
+         MVC       CDISP1+1(79),CDISP1
+         WTOXY     CDISP1,80,05,2B,07 *si es negativo muestro el signo
+	 WTOXY     CBORDE,80,05,37,07            
+	 WTOXY     ' ',1,05,2B,07
+	 WTO       '-'
+	 B         EQUSIGNO
+*        el signo esta OK ingreso el operando
+OKSIGNO  LA        6,0                    *instruccion nula  
+OPERROR  LA        6,0                    *instruccion nula
+         MVI       CDISP1,C' '
+         MVC       CDISP1+1(79),CDISP1
+         MVC       CDISP1(29),=C'Ingrese el valor del operando'
+         WTOXY     CDISP1,80,04,17,70     *inicializo el display
+	 WTOXY     CBORDE,80,04,37,07                           
+INVPACK  LA        6,0                    *instruccion nula
+	 WTOXY     ' ',1,05,22,07
+         MVI       CDISP1,C' '
+         MVC       CDISP1+1(79),CDISP1
+         WTOXY     CDISP1,80,05,22,07
+	 WTOXY     CBORDE,80,05,37,07         
+	 WTOXY     ' ',1,05,22,07
+	 WTORPC    ,CDSPLAY               *ingreso el operando
+	 LA        6,CDSPLAY              *calculo su longitud 
+	 LA        7,8                    *hasta el primer blanco
+	 LA        8,0                    
+COMLONG  CLI       0(6),C' '                  
+	 BE        LONG
+	 LA        6,1(6)
+	 LA        8,1(8)         
+	 BCT       7,COMLONG                  
+LONG     LA        6,CDSPLAY        
+	 LR        9,8             *guardo la longitud del numero 
+COMPACK  CLI       0(6),C'0'       *lo valido por valores limites
+	 BL        INVPACK
+	 CLI       0(6),C'9'
+	 BH        INVPACK
+	 LA        6,1(6)
+	 BCT       8,COMPACK         
+*        acomodo el texto para poder empaquetarlo                  
+	 MVI       CEMPA,C'0'
+	 MVC       CEMPA+1(8),CEMPA
+*10	 LA        10,1
+	 LA        6,CDSPLAY
+*10	 SR        9,10
+         S         9,FUNO     
+	 AR        6,9      
+*10	 AR        9,10
+         A         9,FUNO     
+	 LA        7,CEMPA+8
+MVCARAC  MVC       0(1,7),0(6)
+*10	 SR        6,10
+         S         6,FUNO
+*10	 SR        7,10
+         S         7,FUNO
+	 BCT       9,MVCARAC    
+	 PACK      PDSPLAY,CEMPA   *guardo el empaketado valido         
+	 CLI       CSIGNO,C'+'     *seteo el signo del empaketado
+	 BE        EQUSIGNO         
+	 MVN       PDSPLAY+4(1),=X'BB'
+EQUSIGNO LA        6,0
+*        el operando esta OK ingreso la operacion
+         MVI       CDISP1,C' '
+         MVC       CDISP1+1(79),CDISP1
+         MVC       CDISP1(20),=C'Ingrese la operacion' 
+	 WTOXY     CDISP1,80,04,17,70
+         WTOXY     CBORDE,80,04,37,07         
+OPERAROR LA        6,0
+	 WTOXY     ' ',1,05,17,07
+	 WTOR      ,COPERAC               *ingreso de la operacion
+	 LA        6,TOPERAC              *validacion de la operacion
+	 LA        7,14
+OPERCOMP CLC       0(1,6),COPERAC
+	 BE        OPEROK
+	 LA        6,1(6)
+	 BCT       7,OPERCOMP
+	 B         OPERAROR
+OPEROK   CLI       COPERAC,C'+'
+	 BE        SUMA
+	 CLI       COPERAC,C'-'
+	 BE        RESTA
+	 CLI       COPERAC,C'*'
+	 BE        PRODUCTO
+	 CLI       COPERAC,C'/'
+	 BE        DIVISION
+	 CLI       COPERAC,C'C'
+	 BE        CLACUMUL
+	 CLI       COPERAC,C'c'
+	 BE        CLACUMUL
+	 CLI       COPERAC,C'X'
+	 BE        CLMEM
+	 CLI       COPERAC,C'x'
+	 BE        CLMEM
+	 CLI       COPERAC,C'R'
+	 BE        RECALL
+	 CLI       COPERAC,C'r'
+	 BE        RECALL
+	 CLI       COPERAC,C'A'
+	 BE        MEMADD
+	 CLI       COPERAC,C'a'
+	 BE        MEMADD
+	 CLI       COPERAC,C'M'
+	 BE        CALCFIN
+	 CLI       COPERAC,C'm'
+	 BE        CALCFIN
+SUMA     AP        PACUMUL,PDSPLAY         
+	 MVC       CAUX(1),PACUMUL        *controlo que no de overflow
+	 MVN       CAUX(1),=X'00'
+	 CLC       CAUX(1),=X'00'
+	 BE        SUMAOK
+	 B         CALCOVER
+SUMAOK   B         CICLOCAL
+RESTA    SP        PACUMUL,PDSPLAY    
+	 MVC       CAUX(1),PACUMUL        *controlo que no de overflow
+	 MVN       CAUX(1),=X'00'
+	 CLC       CAUX(1),=X'00'
+	 BE        RESTAOK
+	 B         CALCOVER
+RESTAOK  B         CICLOCAL
+PRODUCTO ZAP       PLONG,PACUMUL
+	 MP        PLONG,PDSPLAY
+	 ZAP       PACUMUL,PLONG
+	 MVC       CAUX(1),PLONG+5        *controlo que no de overflow
+	 MVN       CAUX,=X'00'
+	 CLC       CAUX,=X'00'
+	 BNE       CALCOVER
+	 MVC       FAUX(4),PLONG
+	 L         6,FAUX
+	 L         7,=F'0'
+	 CR        6,7
+	 BNE       CALCOVER
+PRODOK   B         CICLOCAL
+DIVISION ZAP       PLONG,PACUMUL
+	 CP        PDSPLAY,=P'0'          *controlo no dividir por cero
+	 BE        CALCOVER           
+	 DP        PLONG,PDSPLAY
+	 ZAP       PRESTO,PLONG           *este es el resto
+	 MVC       PACUMUL(5),PLONG
+         UNPK      CRESTO,PRESTO
+         MVZ       CRESTO+7(1),=X'FF'      
+DIVOK    B         CICLOCAL
+CLACUMUL ZAP       PACUMUL,=P'0' 
+	 B         CICLOCAL
+CLMEM    ZAP       PMEMORIA,=P'0'
+	 B         CICLOCAL
+RECALL   ZAP       PACUMUL,PMEMORIA         
+	 B         CICLOCAL
+MEMADD   AP        PMEMORIA,PDSPLAY
+	 MVC       CAUX(1),PMEMORIA       *controlo que no de overflow
+	 MVN       CAUX(1),=X'00'
+	 CLC       CAUX(1),=X'00'
+	 BE        MEMADDOK
+	 B         CALCOVER
+MEMADDOK B         CICLOCAL
+CALCOVER LA        6,0	 
+         MVI       CDISP1,C' '
+         MVC       CDISP1+1(79),CDISP1
+         WTOXY     CDISP1,80,04,17,07
+         MVC       CDISP1(5),=C'ERROR'
+	 WTOXY     CDISP1,5,04,1F,07	 
+         MVI       CDISP1,C' '
+         MVC       CDISP1+1(79),CDISP1
+         WTOXY     CDISP1,80,04,24,07
+	 WTOXY     CBORDE,80,04,37,07            
+	 WTOXY     CDISP1,80,05,17,07
+	 WTOXY     CBORDE,80,05,37,07            
+	 WTOR      ' ',CAUX
+	 B         CALCINIT                           *muestro la interfase
+CALCFIN  BR        5
+
+**************      subrrutina memo      ******************
+*
+SMEMO    CLRSCR
+*inicializo la memoria
+         LA        6,TNOTAS
+         LA        7,5
+INITNOT  MVC       0(2,6),=X'0FE2'
+         LA        6,100(6)
+         BCT       7,INITNOT
+*cargo todas las notas a memoria
+         OPEN      FGNOTAS
+         LA        6,TNOTAS         
+         ZAP       PCONT,=P'0'
+LEERN    GET       FGNOTAS,RGNOTA
+         CLI       RGNDEL,C'N'
+         BNE       NOINCR
+         AP        PCONT,=P'1'    *contador de lineas en memoria
+         MVC       RGNCONT(1),PCONT+1
+NOINCR   MVC       0(20,6),RGNOTA
+         LA        6,20(6)
+         B         LEERN
+ENOTAS   CLOSE     FGNOTAS
+*muestro la interfase
+         WTOXY     CDISP6,80,00,00,17
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA
+         MVC       CLINEA(15),=C'<1>  NUEVA NOTA'
+         WTOXY     CLINEA,80,05,17,07
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA
+         MVC       CLINEA(14),=C'<2>  LEER NOTA'
+         WTOXY     CLINEA,80,06,17,07
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA
+         MVC       CLINEA(16),=C'<3>  BORRAR NOTA'
+         WTOXY     CLINEA,80,07,17,07
+         WTOXY     ' ',1,08,27,07
+*el usuario ingresa una opcion
+ERRNOTA  LA        7,0
+         WTOXY     ' ',1,07,27,07
+         WTOR      ,CAUX
+         CLI       CAUX,C'1'
+         BE        NEWNOTA
+         CLI       CAUX,C'2'
+         BE        LEERNOTA
+         CLI       CAUX,C'3'
+         BE        BORRNOTA
+         CLI       CAUX,C'M'
+         BE        ENDMEMO
+         CLI       CAUX,C'm'
+         BE        ENDMEMO
+         B         ERRNOTA
+* agrego una nueva nota
+NEWNOTA  CLRSCR
+         WTOXY     CDISP6,80,00,00,17
+         CP        PCONT,=P'25'
+         BE        FULLMEM2
+*se que hay lugar en memoria para la nueva nota, lo busco
+         AP        PCONT,=P'1'        *contador de lineas en memoria
+         LA        6,TNOTAS
+         LA        7,5
+BUSQNOT  CLI       1(6),C'S'
+         BE        OKBUSNOT
+         LA        6,100(6)     *me muevo de a una nota
+         BCT       7,BUSQNOT
+*R6 apunta al comienzo de la nueva nota
+OKBUSNOT LA        7,0
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA
+         MVC       CLINEA(10),=C'NUEVA NOTA'
+         WTOXY     CLINEA,80,04,05,07
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA               
+         MVC       CLINEA(8),=C'Nombre: '
+         WTOXY     CLINEA,80,05,00,07
+         MVC       RGNCONT(1),PCONT+1         
+         WTOXY     ' ',1,06,00,07
+         WTORPC    ,RGNNAME
+         MVI       CLINEA,C' '
+         MVC       CLINEA+1(79),CLINEA               
+         MVC       CLINEA(6),=C'Nota: '
+         WTOXY     CLINEA,80,08,00,07
+         WTOXY     ' ',1,09,00,07
+         WTOR      ,RGNLINE
+         MVC       0(20,6),RGNOTA  *inserto la 1er linea en TNOTAS
+         MVC       1(1,6),=C'N'
+         LA        6,20(6)         *me muevo de a una linea
+         LA        7,4
+OTRALINE LA        8,0
+         WTOR      ,RGNOMBRE
+         MVC       0(20,6),RGNOMBRE
+         LA        6,20(6)
+         BCT       7,OTRALINE         
+         B         MEMOFIN       *guardar las notas en el archivo
+*
+*
+*
+*         
+FULLMEM2 LA        7,0
+         WTOXY     ' ',1,03,05,07
+         WTOR      'MEMORIA INSUFICIENTE PARA UNA NUEVA NOTA',CAUX
+         B         SMEMO
+*
+*         
+*
+LEERNOTA CLRSCR
+         WTOXY     CDISP6,80,00,00,17         
+         MVI       CLINEA,C' '
+	 MVC       CLINEA+1(79),CLINEA
+	 MVC       CLINEA(9),=C'LEER NOTA'
+         WTOXY     CLINEA,80,04,05,07         
+         LA        11,5
+         LA        6,TNOTAS
+LISTNOTA CLI       1(6),C'N'
+         BNE       OTRANOT
+         MVI       CLINEA,C' '
+	 MVC       CLINEA+1(79),CLINEA
+         MVC       CLINEA+3(1),=C'('                  
+         UNPK      CAUX,0(1,6)
+         MVZ       CAUX(1),=X'FF'         
+         MVC       CLINEA+4(1),CAUX
+	 MVC       CLINEA+5(2),=C') '
+	 MVC       CLINEA+7(6),2(6)
+	 WTO       CLINEA
+OTRANOT  LA        6,100(6)
+         BCT       11,LISTNOTA         
+ERRLIST  LA        7,0         
+         WTOXY     ' ',1,0E,17,07
+         WTO       'Seleccione una nota'
+         WTOR      ,CAUX
+         CLI       CAUX,C'1'
+         BL        ERRLIST
+         CLI       CAUX,C'9'
+         BH        ERRLIST
+         PACK      PBUSQ,CAUX
+         CP        PBUSQ,PCONT
+         BH        ERRLIST
+*el usuario selecciono una nota, la muestro
+         LA        6,TNOTAS
+         LA        11,5
+BUSNOT   CP        PBUSQ,0(1,6)
+         BE        OKLIST
+         LA        6,100(6)    
+         BCT       11,BUSNOT
+*R6 apunta a la nota pedida por el usuario
+OKLIST   CLRSCR         
+         MVI       CLINEA,C' '
+	 MVC       CLINEA+1(79),CLINEA               
+         MVC       CLINEA+3(6),=C'Nota: '
+         MVC       CLINEA+9(6),2(6)
+         WTOXY     ' ',1,07,17,07
+         WTO       CLINEA         
+         MVI       CLINEA,C' '
+	 MVC       CLINEA+1(79),CLINEA               	 
+	 MVC       CLINEA+9(12),8(6)
+	 WTOXY     ' ',1,09,17,07
+         WTO       CLINEA
+         LA        6,20(6)
+*
+         LA        11,4
+MOSTNOT  MVI       CLINEA,C' '
+	 MVC       CLINEA+1(79),CLINEA               	 
+         MVC       CLINEA+9(20),0(6)
+         LA        6,20(6)
+         WTO       CLINEA
+         BCT       11,MOSTNOT
+         WTOR      ,CAUX         
+         B         SMEMO
+*
+BORRNOTA CLRSCR
+         WTOXY     CDISP6,80,00,00,17         
+         MVI       CLINEA,C' '
+	 MVC       CLINEA+1(79),CLINEA
+	 MVC       CLINEA(11),=C'BORRAR NOTA'
+         WTOXY     CLINEA,80,04,05,07         
+         LA        11,5
+         LA        6,TNOTAS
+DELNOTA  CLI       1(6),C'N'
+         BNE       OTRADEL
+         MVI       CLINEA,C' '
+	 MVC       CLINEA+1(79),CLINEA
+         MVC       CLINEA+3(1),=C'('                  
+         UNPK      CAUX,0(1,6)
+         MVZ       CAUX(1),=X'FF'         
+         MVC       CLINEA+4(1),CAUX
+	 MVC       CLINEA+5(2),=C') '
+	 MVC       CLINEA+7(6),2(6)
+	 WTO       CLINEA
+OTRADEL  LA        6,100(6)
+         BCT       11,DELNOTA         
+ERRDEL   LA        7,0         
+         WTOXY     ' ',1,0E,17,07
+         WTO       'Seleccione una nota'
+         WTOR      ,CAUX
+         CLI       CAUX,C'1'
+         BL        ERRDEL
+         CLI       CAUX,C'9'
+         BH        ERRDEL
+         PACK      PBUSQ,CAUX
+         CP        PBUSQ,PCONT
+         BH        ERRDEL
+*el usuario selecciono una nota, la elimino
+         LA       6,TNOTAS
+         LA        11,5
+DELNOT   CP        PBUSQ,0(1,6)
+         BE        OKDELETE
+         LA        6,100(6)    
+         BCT      11,DELNOT
+OKDELETE MVI      1(6),C'S'
+         B        MEMOFIN
+*
+MEMOFIN  OPEN      FPNOTAS      
+         LA        6,TNOTAS
+         LA        11,5 
+PUTNOTA  MVC       RGNOMBRE(20),0(6)
+         CLI       1(6),C'N'         
+         BNE       ERRPUTN                  
+         PUT       FPNOTAS,RGNOMBRE         
+         LA        8,4
+	 LA        6,20(6)
+PUTLINE  MVC       RGNOMBRE(20),0(6)
+         PUT       FPNOTAS,RGNOMBRE         
+         LA        6,20(6)
+         BCT       8,PUTLINE
+         B         VOYBCT
+ERRPUTN  LA        6,100(6)         
+VOYBCT   BCT       11,PUTNOTA
+         CLOSE     FPNOTAS
+*         CLI       COPERAC,C'E'
+*         BE        AGREGAR
+         B         SMEMO
+ENDMEMO  BR        5
+* fin de la subrrutina SMEMO
+
+
+*----------------------------------------------------------
+*                       DEFINICIONES 
+*----------------------------------------------------------
+*GENERALES
+*------------------                  
+         LTORG
+         DEF_VGA   
+CLINEA   DS        CL80
+OPCION   DS        C                 
+COPERAC  DS        C     *operacion a realizar
+CAUX     DS        C     *auxiliar
+CDISP6   DS        CL80  *linea auxiliar
+BYTE     DS        B
+PCONT    DS        PL2
+PBUSQ    DS        P
+FAUX2    DS        F
+FUNO     DC        F'1'
+*
+*------------------
+*AGENDA
+*------------------
+FCONTRG  DS        F           *palabra para contar los registros
+CFECHA   DS        CL10        *fecha con las barras "/"         
+TAGENDA  DC        9CL255' '  *guardo lugar para 10 registros
+REGISTRO DS        0CL255      *registro
+RGCONT   DS        PL2          *contador para las busquedas
+RGDEL    DS        C            *flag de eliminacion(S/N)
+RGNOMBRE DS        CL20         *campo NOMBRE
+RGAPE    DS        CL20         *campo APELLIDO
+RGDOMP   DS        CL50         *campo DOMICILIO PARTICULAR
+RGDOMC   DS        CL50         *campo DOMICILIO COMERCIAL
+RGTELP   DS        CL30         *campo TELEFONO PARTICULAR
+RGTELC   DS        CL30         *campo TELEFONO COMERCIAL
+RGEMAIL  DS        CL35         *campo EMAIL
+RGFECHA  DS        0CL8         *campo FECHA
+RGFDIA   DS        CL2           *campo DIA
+RGFMES   DS        CL2           *campo MES
+RGFANIO  DS        CL4           *campo ANIO*
+RGCOMP   DS        CL9
+BAPE     DS        CL20        *campo APELLIDO para la busqueda
+BDOM     DS        CL50        *campo DOMICILIO para la busqueda
+BFECH    DS        CL10         *campo FECHA para la busqueda
+*
+*------------------
+*CALCULADORA
+*------------------ 
+CDISP1   DC        CL80' '         
+CSIGNO   DS        C     *signo del operando (+,-)
+CBORDE   DC        CL80'| |'
+CDSPLAY  DS        CL8   *numero que ingresa por teclado
+CEMPA    DS        CL9   *auxiliar para acomodar el CDSPLAY 
+CRESTO   DS        CL8   *campo para mostrar el resto de una division
+BSIGNO   DS        B     *byte para analizar el signo del acumulador
+PDSPLAY  DS        PL5   *operando que se muestra en el display
+PACUMUL  DS        PL5   *acumulador
+PMEMORIA DS        PL5   *memoria
+PLONG    DS        PL10   *empaquetado largo auxiliar 
+PRESTO   DS        PL5   *empaquetado, guarda el resto de una division
+FAUX     DS        F     *palabra auxiliar para ver el overflow
+TOPERAC  DC        CL14'+*-/CcXxRrAaMm' *validacion de las operaciones
+*
+*------------------
+*NOTAS - MEMO
+*------------------
+TNOTAS   DS        25CL20  *tabla de 5 notas de 5 lineas(maximo)
+RGNOTA   DS        0CL20    *registro para las notas (memos)
+RGNCONT  DS         P
+RGNDEL   DS         C
+RGNNAME  DS         CL6
+RGNLINE  DS         CL12
+*
+*------------------
+*ARCHIVOS
+*------------------	 
+FGSPLASH DCB       DDNAME='SPLASH.PNT',DSORG=S,RECFM=F,LRECL=80,
+		   MACRF=G,EODAD=ESPLASH
+FGINIT   DCB       DDNAME='INIT.PNT',DSORG=S,RECFM=F,LRECL=80,
+		   MACRF=G,EODAD=EINIT
+FGCALCU  DCB       DDNAME='CALCU.PNT',DSORG=S,RECFM=F,LRECL=80,
+		   MACRF=G,EODAD=ECALCU
+FGAGEN   DCB       DDNAME='AGEN.PNT',DSORG=S,RECFM=F,LRECL=80,
+		   MACRF=G,EODAD=EAGEN
+FGBUSC   DCB       DDNAME='BUSC.PNT',DSORG=S,RECFM=F,LRECL=80,
+		   MACRF=G,EODAD=EBUSC
+FGCONTAC DCB       DDNAME='CONTAC.DAT',DSORG=S,RECFM=F,LRECL=255,
+		   MACRF=G,EODAD=ECONTAC
+FPCONTAC DCB       DDNAME='CONTAC.DAT',DSORG=S,RECFM=F,LRECL=255,
+		   MACRF=P
+FGNOTAS  DCB       DDNAME='NOTAS.DAT',DSORG=S,RECFM=F,LRECL=20,
+                   MACRF=G,EODAD=ENOTAS
+FPNOTAS  DCB       DDNAME='NOTAS.DAT',DSORG=S,RECFM=F,LRECL=20,
+		   MACRF=P
+*ARCHI    DCB       DDNAME='VAL.DAT',DSORG=S,RECFM=F,LRECL=1,MACRF=P
+	 END
+*
+*----------------------------------------------------------
+*              REFERENCIA DE TIPOS DE VARIABLES 
+*----------------------------------------------------------
+* ARCHIVOS (GET)   FG
+* ARCHIVOS (PUT)   FP
+* CARACTERES       C
+* EMPAQUETADOS     P  
+* PALABRAS         W
+* DOBLES PALABRAS  D
+* EODAD            E 
+* SUBRRUTINAS      S
+* TABLAS           T
+* BYTES            B
+*----------------------------------------------------------
+*
+*
+*----------------------------------------------------------
+*              REFERENCIA DE LOS COLORES 
+*----------------------------------------------------------
+* formato [XY] [FONDO/LETRA] 
+*----------------------------------------------------------
+* NEGRO            0
+* AZUL OSCURO      1
+* VERDE            2
+* VERDE AGUA       3 
+* ROJO             4
+* FUCSIA           5
+* NARANJA          6
+* GRIS CLARO       7
+* GRIS OSCURO      8  (desde windows se ve negro)
+* AZUL BLINK       9
+* VERDE BLINK      A 
+* AMARILLO         E
+* DE (9) HASTA (F), COLORES BRILLANTES PARA LA FUENTE
+* Y BLINKEO PARA EL FONDO
+*----------------------------------------------------------
+*         OPEN      ARCHI
+*         PUT       ARCHI,PLONG
+*         CLOSE     ARCHI

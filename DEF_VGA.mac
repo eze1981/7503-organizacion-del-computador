@@ -1,0 +1,16 @@
+DEF_VGA MACRO   A
+         AIF     &1=A.BIEN
+         AGO     .ERR1
+.BIEN    ANOP
+*WTOXY    EQU   80
+WTOXY    DS    CL80     area temporal para el texto de la macro WTOXY
+*WTOXYE   DC    CL80' '  area con blancos para limpiar a WTOXY 
+V320     EQU   4        Un tipo de Pantalla de 320x200 pixel
+V24X80   EQU   2        Modo consola de 24fila x 80columnas
+REFRESH  EQU   X'80'+X'10' Interrupcion Micro 8088 Arquitectura
+VSET     EQU   0         Para la Mascara El Seteo
+*                     (en verdad no se muy bien lo que hace)
+*
+******************** By Ruben Pantaleon Miranda ***
+
+.FIN    ANOP

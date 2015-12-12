@@ -1,0 +1,203 @@
+TITULO: RATON !!!
+------
+
+ Estimados Colegas:
+
+                       Me dirijo otra vez a ustedes con el fin de darles
+                       otra utilidad para la creacion y belleza del TP
+                       que tenemos que hacer para la Catedra.          
+                       Ahora bien, anteriormente vimos como utilzar el
+                       color, posicionarnos en X,Y de pantalla, y otros.
+
+                       ¨Que me dirian si les digo que pueden usar el MOUSE?
+                       -o bien a lo Argentino el Ratoncito!! :-)
+
+
+
+     ú  La idea
+        -------
+                       Si bien estamos en un emulador de IBM370, lo estamos
+                       corriendo bajo un Micro-Procesador Superior, llamados
+                       los 8086. Entonces me parecia que si estamos accedien-
+                       do a casi nivel maquina, como no vamos a poder manejar
+                       todo lo que quieramos?
+
+                       La idea tenemos que acceder a las interrupciones del
+                       Micro. pero NO como IBM370, sino que hay que pedir
+                       al Supervisor (SO) que nos permita acceder al MICRO
+                       8086. (esto se hace con SVC 34 -Instruccion-)
+
+                       La SVC 34, relacionada con una tabla de Variables,
+                       ejecuta una instrucion como si fuera el Asembler de
+                       8086.
+
+                       Para esto consulte el Manual del Turbo Asember (de
+                       Borland) y luego de unas noche de insomnio, llegue a
+                       formular un codigo que permitia cargar el Raton!
+
+
+ ú  A saber:
+    --------
+                        Asember de 8086 tiene otros registros llamados
+
+                        AX,BX,CX,DX,DS,SI,ES,DI osea los R0 al R14 no
+                                                los puede encontrar!
+
+                        Tambien tiene llamadas al supervisor como IBM370
+                        en vez de llamarse SVC se llama INT (interrupcion)
+
+        Cargar MOUSE:  AX = 1 y la interrupcion es 33 en HEXA
+        ~~~~~~~~~~~~
+
+
+        Quitar MOUSE:  AX = 2 y la interrupcion es 33 en HEXA
+        ~~~~~~~~~~~~
+
+
+        Click  MOUSE:  AX = 3 y la interrupcion es 33 en HEXA
+        ~~~~~~~~~~~~   
+                       pero en BX retorna la pulsacion si es...
+
+                               BX=1 boton derecho
+                               BX=2 boton izquierdo
+                               BX=3 boton del Medio o emulacion del
+                                    boton derecho + izquierdo
+
+
+     Coordenada MOUSE:  AX = 3 y la interrupcion es 33 en HEXA
+     ~~~~~~~~~~~~~~~~   
+                       pero en CX retorna Poscion X
+
+                       pero en DX retorna Poscion Y
+
+                       CX,DX en formato HEXA
+
+
+
+                          *      *      *
+
+
+
+
+  ú Los Archivos:     Para utlizar esta nueva prestacion, les envio
+    ------------      uno archivo de ejemplo (raton.com), con su codigo
+                      (raton.mlc) y las macros utilizadas! (*.MAC)
+
+
+        ú Las Macros:
+        ~~~~~~~~~~~~~~~
+                       MOUSE#ON  <nombre programa> 
+
+                               Esta macro inicializa el Mouse, se le debe
+                               pasar el nombre del programa que va a utilzar
+                               el Raton!
+
+
+
+                       MOUSE#OF <nombre programa>
+
+                               Quita el Raton de la vista del usuario,
+                               no permitiendo su uso!
+
+
+                       MOUSE#XY <nombre programa>, XXXX, YYYY 
+
+                                Esta macro, consulta al mouse si esta
+                                en las las posiciones XXXX,YYYY de la
+                                pantalla!
+
+                                Es necesario el nombre del programa que
+                                esta utilizando el mouse!
+
+                                XXXX= coordenada fila!
+
+                                YYYY= coordenada columna!
+
+                                ambas en formato hexa '0000' (4 digitos)
+
+
+
+                       MOUSE#10 <nombre programa>
+
+                                Esta macro, consulta si el mouse ha teni-
+                                do una pulsacion de Su boton  IZQUIERDO!
+
+
+                       MOUSE#01 <nombre programa>
+
+                                Esta macro, consulta si el mouse ha teni-
+                                do una pulsacion de Su boton  DERECHO  !
+
+
+                       MOUSE#11 <nombre programa>
+
+                                Esta macro, consulta si el mouse ha teni-
+                                do una pulsacion de Su boton del MEDIO!
+
+
+ Ejemplo Visual:             si el mouse tiene 3 botones 
+
+                                 ||   ||   ||   
+                                 ||   ||   ||
+                                 ||   ||   ||
+
+ Boton Numero:                   1     3    2
+
+ Codigicacion:                  10    11   01     (como si fueran Bit on/off)
+
+
+
+
+
+                       MOUSE#__ <nombre programa>
+
+                                Esta macro, luego de pulsar una tecla nos
+                                muestra en pantalla la posicion en Coorde-
+                                nadas del Raton, es para tener una idea
+                                de los valores a utilizar en XXXX,YYYY
+
+                                Es muy practico para el momento del dise¤o
+                                del program y ver en que lugar se quiere
+                                poner un texto que debe ser pulsado con el
+                                mouse!
+
+			  Retorna el valor directo de memoria, luego
+			  buscamos en las tablas que tenemos el dibujo
+			  que aparecio y obtenemos la posicion HEXA!
+
+
+
+                       MOUSE#DC                  
+
+                                Significa Mouse Definicion Constantes    
+                                Aqui se encuentran las definiciones y la
+                                tabla que utiliza la interrupcion de IBM370
+                                SVC 34 para acceder a Asembles 8086 y alli
+                                ejecutarla Interrupcion 8086 numero 33 Hexa
+                                
+                                Debe ir en el area de las definiciones del
+                                programa (por ejemplo al final!)
+
+
+                          *      *      *
+
+
+
+
+        Bibliografia:
+        -------------    -  Manual Turbo Asember 2.0, Borland international INC
+                            a¤o 1990, USA
+                           
+                         -  Archivo \\IBM370\DEMO\DEMOINT.ALC
+
+                         -  Archivo \\IBM370\CPY\*.* (leer todos!)
+
+
+
+
+ El codigo esta a su entera disposicion, si desean agregarle alguna
+ Sub-rutina mas, sera bienvenida!
+
+                 Nos vemos!!!
+                                                 Salu2 rpm
+

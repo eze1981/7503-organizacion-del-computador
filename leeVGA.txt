@@ -1,0 +1,162 @@
+TITULO: MACROS!!!  Version 2
+------
+        
+        Todo va en un archivo llamado "Macros VGA (v2-rpm).ZIP"
+
+
+ Estimados Colegas:
+
+                       Acabo de terminar dos macros que me facilitaran
+                       para hacer el TP que me ha tocado!
+                       Y considerando que puedan ser util para ustedes
+                       se las doy a conocer!!
+
+
+              -   CLRSCR.MAC   esta limpia la pantalla igual al CLS del
+                               MS-DOS.
+
+              -   WTOXY.MAC    Escribe un mensaje en pantalla a la
+                               posicion determinada como X,Y
+                                        x: Columna
+                                        y: Fila
+                     formato:
+
+                        WTOXY  <Pal>,L,XX,YY,Col
+                        WTOXY  TEXTO,3,02,02,17
+
+                              <Pal>: es una palabra en memoria tipo Char
+                                L  : longitud en Byte de la <Pal>
+                                XX : Coordenadas Columna 
+                                YY : Coordenadas Filas
+                                Col: Tipo de Color, del 1..140
+
+
+        Nota: - WtoXY, tiene que tener las Coordenas del fomato XX
+        ====    Si quiero la posicion 4 sera -> 04, si quiero la 
+	    posicion 16 -> 10 (USA BASE 16)
+
+              - No piensen en los literales como =C'El mensaje'
+                pues no va como parametro <pal>
+
+(importante)  - Porque hablamos de la longitud en Bytes, lo que pasa
+                es que cuando imprime en pantalla utiliza los Caracteres
+                ASCII de la palabra, entonces lo que hace la "L" es decirle
+                quiero convertir a ASCII la palabra <Pal> para poder inprimir
+                sus texto original.
+                Ventaja: Si queremos escribir mita en ASCII y mita en EBCDIC
+                -------  y la long de CHAR es 8, le ponemos 4, y combia a
+                         ASCII los 4 primeros.
+                         !! Se me ocurrio que podria ser util !!
+
+
+
+
+
+  Ademas debo decir que la macro CLRSCR.MAC funciona correctamente
+  con la Macro FIN.MAC, y con la DEF_VGA.MAC, que tambien les envio:
+
+               -   FIN.MAC      esta macro es igual a CHAU.MAC pero se le
+                              ha agregado el retorno del programa
+                              al Sistema Operativo, de lo contrario HACE
+                              QUE SE CUELGE EL PROGRMA, y bajo Consola en
+                              Windows9x que sea Operacion No valida!
+
+               -  DEF_VGA.MAC  esta lo que hace es determinar algunas
+                               Palabras (en memoria por supuesto),
+                               para que sea utilizado con CLRSCR.MAC
+                               Debe ir al comienzo de las declaraciones
+                               que hagamos para el programa.
+
+
+
+
+ Por ultimo para que vean como funcionan les envio las Macros y
+ y archivo de EJEMPLO.MLC y el archivo BATchero X.BAT para compilar
+ el programa. (suponiendo que estan todos los Directorios copiados
+ a uno solo!)
+
+
+
+ El codigo esta a su entera disposicion, si desean agregarle alguna
+ Sub-rutina mas, sera bienvenida!
+
+                 Nos vemos!!!
+                                                 Salu2 rpm
+
+----------------------------------------------------------------------------
+Encabezado de MACROS.!!!
+
+CLRSCR.MAC
+********************************************************************
+* De:    Ruben Pantaleon Miranda (78060) FiUba
+* Fecha: Jueves 25 Abril 2002
+* Tema:  Macro para                           ** LIMPIAR PANTALLA **
+*
+* Nota:
+* ----  Vean el arhivo   \\ibm360\demo\PLOTXY.alc
+*       La siguiente macro fue reducida de alli!!
+*
+*       Con LPG (licencia Publica General).  (Codigo Libre)
+*
+*                             Usa la Macro "FIN.MAC" y "DEF_VGA.MAC"
+********************************************************************
+
+
+
+
+
+DEF_VGA.MAC
+********************************************************************
+* De:    Ruben Pantaleon Miranda (78060) FiUba
+* Fecha: Jueves 25 Abril 2002
+* Tema:  Macro para                        ** DEFINE PANTALLA VGA **
+*
+* Nota:
+* ----  Vean el arhivo   \\ibm360\demo\PLOTXY.alc
+*       La siguiente macro fue reducida de alli!!
+*
+*       Con LPG (licencia Publica General).  (Codigo Libre)
+*
+*    -----
+*       Esta macro defe ir al Comienzo de la Definiciones Despues
+*       de la macho ­­­FIN!!!
+*    -----
+********************************************************************
+
+
+
+
+FIN.MAC
+********************************************************************
+* De:    Ruben Pantaleon Miranda (78060) FiUba
+* Fecha: Jueves 25 Abril 2002
+* Tema:  Macro para                        ** FIN DE PROCESO **
+*
+* Nota:
+* ----  Vean el arhivo   \\ibm360\mac\CHAU.MAC
+*       La siguiente macro fue ampleada de alli!!
+*
+*       Con LPG (licencia Publica General).  (Codigo Libre)
+*
+*    El cambio es esta macro es que se le devolio al Sistema
+*    operativo el control del programa, sino no anda la CLRSCR.MAC
+*    
+********************************************************************
+
+
+
+
+WTOXY.MAC
+********************************************************************
+* De:    Ruben Pantaleon Miranda (78060) FiUba
+* Fecha: Jueves 25 Abril 2002
+* Tema:  Macro para                           ** POSICIONA CURSOR **
+*                                             **   y COLOREA TXT  **
+* Nota:
+* ----  Vean el arhivo   \\ibm360\util\SEE.alc
+*       La siguiente macro fue reducida de alli!!
+*
+*       Con LPG (licencia Publica General).  (Codigo Libre)
+*                          
+********************************************************************
+

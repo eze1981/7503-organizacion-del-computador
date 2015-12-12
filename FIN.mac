@@ -1,0 +1,12 @@
+FIN     MACRO   A
+        AIF     &1=A.BIEN
+        AGO     .ERR1
+.BIEN   ANOP
+&LABEL$$ SVC   0  Retorna al Sistema Operativo
+        L      13,4(0,13)
+        LM      14,12,12(13)
+        BR      14
+******************** By Ruben Pantaleon Miranda ***
+        AGO     .FIN
+.ERR1   LA FIN NO LLEVA PARAMETROS
+.FIN    ANOP

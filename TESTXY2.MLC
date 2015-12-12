@@ -1,0 +1,14 @@
+*23456789-23456789-23456789-23456789
+TESTXY2  PPIO     3
+*         CLRSCR
+         WTOXY     TEXTO,11,00,00,17
+	 WTOXY     'hola carajo',11,01,00,17 
+*  	 WTOXY    TEXTO2,80,00,00,17             
+*         WTOXY    'HOLA',4,02,00,17         
+*         WTOR     ,TEXTO
+         FIN
+         
+*         DEF_VGA         
+TEXTO    DC       CL11'hola carajo'
+TEXTO2   DC       CL80'JEAAA Q1'
+         END

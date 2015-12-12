@@ -1,0 +1,10 @@
+CLRSCR  MACRO   A
+        AIF     &1=A.BIEN
+        AGO     .ERR1
+.BIEN   ANOP
+&LABEL$$ ICM   0,B'0011',=AL1(VSET,V24X80) 
+        SVC   REFRESH     
+******************** By Ruben Pantaleon Miranda ***
+        AGO     .FIN
+.ERR1   LA ClrScr NO LLEVA PARAMETROS
+.FIN    ANOP

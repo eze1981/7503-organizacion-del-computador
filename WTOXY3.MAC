@@ -1,0 +1,80 @@
+WTOXY	 MACRO ,L'&1
+         AIF   &1='.LIT
+**********************************************************
+*        El primer parametro es un ROTULO
+*        Ej: WTOXY     LINEA,80,00,00,17
+**********************************************************
+* &LABEL$$ IC    0,&1+&2
+* 	 MVI   &1+&2,C'$'    *copia el retorno de carro	 
+*         MVI   WTOXY,C' '
+*         MVC   WTOXY+1(79),WTOXY
+&LABEL$$ LA    1,&1       *R1 <-- direccion de WTOXY
+*         MVC   0(&2,1),&1    *copia el texto en WTOXY
+         LA    2,&2          *R2 <-- tamano a convertir
+         SVC   13            *convierte WTOXY2 a ASCII	 
+         SR    1,1           
+         IC    1,=X'&5'      *R1 <-- color 
+         LA    15,X'&3&4'    *R15 <-- fila/columna
+         LA    2,&1        
+         SVC   24            *imprime en pantalla        
+	 LA    1,&1       *R1 <-- direccion de WTOXY
+	 LA    2,&2          *R2 <-- tamano a convertir
+	 SVC   12            *convierte WTOXY2 a ASCII	          
+*	 STC   0,&1+&2
+	 AGO   .END
+**********************************************************
+*        El primer parametro es un literal     
+*        Ej: WTOXY     'Hola mundo',10,00,00,17 
+**********************************************************
+.LIT	 ANOP
+TEXT	 SETC  &1
+&LABEL$$ LA    1,=C'&TEXT'   *R1 <-- direccion del texto         
+         LA    2,&2          *R2 <-- longitud del texto
+         SVC   13            *convierte el texto a ASCII	                   
+         LA    2,=C'&TEXT'                    
+         SR    1,1           
+         IC    1,=X'&5'      *R1 <-- color 
+         LA    15,X'&3&4'    *R15 <-- fila/columna
+         SVC   24            *imprime en pantalla  
+.END	 ANOP
+
+
+**********************************************************
+* Octubre 2003 
+*
+* Macro mejorada por: Ezequiel M. Gioia
+* Autor original: Ruben Pantaleon Miranda
+*
+* Novedades:
+* °La nueva version acepta un literal como primer parámetro.
+* °Se puede volver a imprimir un texto apuntado por un Rotulo
+*    sin tener que volver a definir su contenido
+* °Si el primer operando es un rotulo, la longitud trunca 
+*     la linea segun se requiera. En cambio si es un literal
+*     se recomienda indicar la longitud exacta del texto. Si es menor
+*     traduce los primeros caracteres, dejando los ultimos en EBCDIC.
+*     Si es mayor, puede no mostrar el texto.
+* 
+* Formato:
+*
+*         WTOXY  <Pal>,L,XX,YY,Col
+*         WTOXY  LINEA,80,02,02,17
+*         WTOXY  'Hola mundo',10,02,02,17
+*         <Pal>: palabra en memoria tipo Char, o un literal
+*         L    : longitud en Byte de la <Pal>
+*         XX   : coordenadas de la Fila
+*         YY   : coordenadas de la Columna
+*         Col  : tipo de Color, del 1..140
+**********************************************************WTOXY3  MACRO                  
+        LA    1,&1 Texto enEBCDIC
+        LA    2,&2  El tamano a convertir 
+        SVC   13    Convierte a ASCII        
+        LA    2,&1  Para ubicar en R2
+        SR    1,1         Limpia el R1
+        IC    1,=X'&5'    Determina el color
+        LA    15,X'&4&3'  Da La posicion
+        SVC   24          Imprimime en Pantalla segun fila(Y),columna(X)
+	LA    1,&1 Texto enEBCDIC
+        LA    2,&2  El tamano a convertir 
+        SVC   12    Convierte a ASCII        
+	

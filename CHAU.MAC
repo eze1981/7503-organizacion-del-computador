@@ -1,0 +1,10 @@
+CHAU    MACRO   A
+        AIF     &1=A.BIEN
+        AGO     .ERR1
+.BIEN   ANOP
+&LABEL$$ L      13,4(0,13)
+        LM      14,12,12(13)
+        BR      14
+        AGO     .FIN
+.ERR1   LA CHAU NO LLEVA PARAMETROS
+.FIN    ANOP

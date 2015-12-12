@@ -1,0 +1,53 @@
+MOUSE#__  MACRO 
+*######################################################### MOUSE#__ #####
+*### Esta Macro develve en pantalla    ###
+*### las coordenadas que se encuantra  ###
+*### el mouse al hacer Click!          ###
+*###
+*### Rebibe parametro x,y  (fila, col) ###
+*###
+*### Se utiliza para la construcion    ###
+*### del programa, para saber de ante  ###
+*### mano que valores de coordenadas   ###
+*### se deben poner!                   ###
+
+         LR    12,15       Carga el R12 con lo del R15
+         USING &1,12       Directiva al Ensamblador usar R12
+*                          en el programa &1 (nombre del programa)
+
+         LA    1,MOUSE#IN  El R1, debe contener la variable inicial
+*                          de la tabla con los parametros a darle
+*                          al Micro 8086, (ver MOUSE#DS.MAC)
+
+         MVC   MOUSE#AX,=X'0003'   AX debe contener "3", significa
+*                                  ver datos del Raton en 8086
+*       ---------
+         SVC   34 Interrupcion de llamada al 8086! Segun DATA#INT
+*       ---------
+*--------------------------------------- XXXX
+         MVC MOUSE001(2),MOUSE#CX                 Esto es la WTO expandida
+         LA    2,=C'RATON: Posicion X$'
+	 SVC   209
+
+         IC    0,MOUSE001+L'MOUSE001
+	 MVI   MOUSE001+L'MOUSE001,C'$'
+	 LA    2,MOUSE001
+	 SVC   209
+	 STC   0,MOUSE001+L'MOUSE001
+*---------------------------------------
+
+*--------------------------------------- YYYY
+         MVC MOUSE001(2),MOUSE#DX                 Esto es la WTO expandida
+         LA    2,=C'RATON: Posicion Y$'
+	 SVC   209
+
+         IC    0,MOUSE001+L'MOUSE001
+	 MVI   MOUSE001+L'MOUSE001,C'$'
+	 LA    2,MOUSE001
+	 SVC   209
+	 STC   0,MOUSE001+L'MOUSE001
+*---------------------------------------
+
+*###                   By Rub‚n Pantel¢n Miranda | 78060 FiUBA
+*###
+*################################ F I N ################## MOUSE#__ #####

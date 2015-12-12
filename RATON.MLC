@@ -1,0 +1,70 @@
+********************************************************************
+* De:    Ruben Pantaleon Miranda (78060) FiUba
+* Fecha: Domingo 2 Junio 2002
+* Tema:  Macro para                           ** Ejemplo de Raton **
+*
+*       Con LPG (licencia Publica General).  (Codigo Libre)
+*
+********************************************************************
+**          Columnas Tabuladas para la Codificacion!!!  **
+*12345678-012345-7890123456789-1234567890123456789012345678901234567890-
+
+RATON PPIO 3,4
+
+         MOUSE#ON RATON        Llama al inicializador y le pasa el
+*                              nombre del programa que lo va a usar
+*                              en este caso es el ejemplo del uso
+*                              del raton (RATON)
+                       
+          WTO 'Mueva el Mouse, y tenga fijo algun boton del mouse'
+          WTOR '-Entonce pulse alguna tecla',TEXT
+          WTO ' '
+
+          MOUSE#10 RATON       Consulta si de pulsa Boton Derecho
+           BE DER
+
+          MOUSE#01 RATON       Consulta si de pulsa Boton Izquierdo
+           BE IZQ
+
+          MOUSE#11 RATON       Consulta si de pulsa Boton del Medio
+           BE MED
+
+          WTO ' No pulsaste ningun Boton del Mouse'
+          B CONT
+        
+DER       WTO ' Boton Derecho!'
+          B CONT
+IZQ       WTO ' Boton Izquierdo!'
+          B CONT
+MED       WTO 'Boton del Medio!'
+
+CONT      EQU *
+
+          WTO ' '
+          WTO ' '
+          WTO 'AHORA: busca una posicion en la pantalla'
+          WTO '       ejemplo marco Sup, IZQ'
+          WTOR '  -y pulsa alguna tecla',TEXT
+          WTO ' '
+          MOUSE#XY RATON,0000,0000      Consulta por una posicion
+
+          BE SI#POS
+          WTO 'No esta en el marcho Superior Izq'
+          B  CONT#POS
+SI#POS    WTO 'Bien, el mouse estaba ahi!'
+
+CONT#POS EQU *
+
+         MOUSE#OF RATON        Quita el Raton, es obligatorio el nombre
+*                              del program que lo esta utilizando  
+
+         FIN
+*			Se puede usar CHAU, yo desde que tengo la
+*	            a utilizo siempre, ver (Macros VGA (v2-rpm).zip)
+* -------- Definiciones ---------
+
+TEXT     DC  C'a'         
+
+         MOUSE#DC              Macro definiciones del uso del Raton
+        
+         END

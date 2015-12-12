@@ -1,0 +1,28 @@
+MOUSE#DC MACRO   
+*######################################################### MOUSE#DC #####
+*### Definiciones para el Uso del Mouse ###
+*###
+
+MOUSE001 DC    C'    '   Variable temporal para uso interno de MOUSE#__
+MOUSE002 DC    C'0000'   iden
+MOUSE#CC DC    C' '      iden
+
+
+MOUSE#IN DS    0F      Prepara llamada al Micro8086 y superior con SVC34
+         DC    C'PCVT' Identificador que implica llamada a Micro 8086
+         DC    H'51'   Interrupcion PRETENDIDA
+         DC    H'0'    Bandera de Salida despues de Interrumpir Micro
+MOUSE#AX DC    X'0000' Registro AX   | INTERRUPCION !on Mouse!    
+MOUSE#BX DC    X'0000'          BX
+MOUSE#CX DC    X'0000'          CX
+MOUSE#DX DC    X'0000'          DX
+MOUSE#DS DC    X'0000'          DS
+MOUSE#SI DC    X'0000'          SI
+MOUSE#ES DC    X'0000'          ES
+MOUSE#DI DC    X'0000'          DI
+
+PCVT     DSECT
+
+*###                   By Rub‚n Pantel¢n Miranda | 78060 FiUBA
+*###
+*################################ F I N ################## MOUSE#DC #####
