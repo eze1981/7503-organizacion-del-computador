@@ -2,6 +2,10 @@
 
 Trabajo práctico de la materia Organización del Computador (75.03) en assembler IBM/370 de la Facultad de Ingeniería de la Universidad de Buenos Aires.
 
+
+![alt tag](http://url/to/img.png)
+
+
 Emulador IBM/370 R42
 
 http://www.pcorner.com/list/ASSEMBLY/R42.ZIP/INFO/
